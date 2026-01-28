@@ -76,21 +76,27 @@ function normalizeAccents(text: string) {
 }
 
 // token builder (prefix tokens for partial matching)
-function makeTokens(text: string): string[] {
-  const normalized = normalizeAccents((text ?? '').toLowerCase());
+// function makeTokens(text: string): string[] {
+//   const normalized = normalizeAccents((text ?? '').toLowerCase());
 
-  // Replace some special chars with spaces
-  const tokens = normalized
-    .replace(/[-/@_]/g, ' ')
-    .split(/\s+/)
+//   // Replace some special chars with spaces
+//   const tokens = normalized
+//     .replace(/[-/@_]/g, ' ')
+//     .split(/\s+/)
+//     .filter(Boolean);
+
+//   // prefix tokens: fate -> f, fa, fat, fate
+//   const prefixes = tokens.flatMap(t =>
+//     t.split('').map((_, i) => t.slice(0, i + 1))
+//   );
+
+//   return Array.from(new Set([...tokens, ...prefixes]));
+// }
+function makeTokens(text: unknown): string[] {
+  const s = String(text ?? "").toLowerCase();
+  return s
+    .split(/[^a-z0-9@]+/g)   // keep @ if you want
     .filter(Boolean);
-
-  // prefix tokens: fate -> f, fa, fat, fate
-  const prefixes = tokens.flatMap(t =>
-    t.split('').map((_, i) => t.slice(0, i + 1))
-  );
-
-  return Array.from(new Set([...tokens, ...prefixes]));
 }
 
 // --------------------

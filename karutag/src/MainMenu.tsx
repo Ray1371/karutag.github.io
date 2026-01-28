@@ -32,17 +32,22 @@ From the chat log titles I can see on my side, the most relevant threads were:
 “Downloadable Files and Codebases” (2026-01-15) — this is more about the dev-server/react version issue, but it’s part of the same “project restoration” arc.
 
 */
+import CollectionTable from "./CollectionTable";
+import SelectedTable from "./SelectedTable";
 
 import './App.css';
 import { useEffect, useState } from 'react';
-import Papa from 'papaparse';
+// import Papa from 'papaparse';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 import { db } from './Upload';
 import type { Card } from './Upload';
 import type { progressSignal } from './progressSignals';
 
-import { searchCards } from './regexStuff';
+import { searchCards,
+         TEXT_KEYS,
+         NUMERIC_KEYS,
+ } from './regexStuff';
 
 // -----------------------------
 
@@ -58,6 +63,8 @@ export default function MainMenu() {
   // Search-related state
   const [searchFilter, setSearchFilter] = useState('');
   const [filteredCards, setFilteredCards] = useState<Card[]>([]);
+  
+
 
   //Select-related state
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -69,6 +76,9 @@ export default function MainMenu() {
     []
   );
 
+  const selectedCards =
+  (fullCollection ?? []).filter((c) => selected.has(c.code));
+
   // Progress signals passed into upload logic
   const signals: progressSignal = {
     updateRowCount: (count) => setRowCount(count),
@@ -76,9 +86,6 @@ export default function MainMenu() {
     updateValid: (valid: boolean) => {
   if (valid) setIsUploading(false);
 },
-    // updateValid: () => {
-    //   setIsUploading(false);
-    // },
   };
 
   // -----------------------------
@@ -94,55 +101,74 @@ export default function MainMenu() {
     }
 
     const parsed = searchCards(searchFilter);
+    console.log(parsed);
 
-    // NOTE: at this time, everything was done with .filter()
-    // (no .where() yet)
+    //Filters still not working as intended
     const query = db.collection.filter(card => {
+
       for (const clause of parsed.clauses) {
         const field = clause.field as keyof Card;
 
-        // Text fields
-        if (typeof clause.value === 'string') {
-          const cardVal = card[field];
-          if (typeof cardVal !== 'string') return false;
+        if(TEXT_KEYS.has(clause.field)) {
 
-          // Case-insensitive contains
-          if (
-            !cardVal
-              .toLowerCase()
-              .includes(clause.value.toLowerCase())
-          ) {
-            return false;
+          if (field === 'character') {
+            const hay = (card.character ?? '').toLowerCase();
+            const needle = clause.value.toString().toLowerCase();
+            if (!hay.includes(needle)) return false;
+          }
+          else if (field === 'series') {
+            const hay = (card.series ?? '').toLowerCase();
+            const needle = clause.value.toString().toLowerCase();
+            if (!hay.includes(needle)) return false;
+          }
+
+          else if(field === 'tag'){
+            //if field is tag, then check if tag exactly matches (lowercase)
+            //todo:handle tag is none / tag:none case
+            //idk about const tag below atm
+            const tag = card.tag ?? '';
+            if(clause.value.toString().toLowerCase() === 'none') {
+              if(tag !== '' || tag.toString().toLowerCase() !== 'none') 
+                return false;
+            }
+            //normal tag check
+            else{
+              if(tag.toLowerCase() !== clause.value.toString().toLowerCase())
+                return false;
+            }
           }
         }
+        else if (NUMERIC_KEYS.has(clause.field)) {
+            const cardVal = card[field];
+            if (typeof cardVal !== 'number') return false;
 
-        // Numeric fields
-        else if (typeof clause.value === 'number') {
-          const cardVal = card[field];
-          if (typeof cardVal !== 'number') return false;
-
-          switch (clause.operator) {
-            case '<':
-              if (!(cardVal < clause.value)) return false;
-              break;
-            case '<=':
-              if (!(cardVal <= clause.value)) return false;
-              break;
-            case '=':
-              if (!(cardVal === clause.value)) return false;
-              break;
-            case '>':
-              if (!(cardVal > clause.value)) return false;
-              break;
-            case '>=':
-              if (!(cardVal >= clause.value)) return false;
-              break;
-          }
+            switch (clause.operator) {
+              case '<':
+                if (!(cardVal < clause.value)) return false;
+                break;
+              case '<=':
+                if (!(cardVal <= clause.value)) return false;
+                break;
+              case '=':
+                if (!(cardVal === clause.value)) return false;
+                break;
+              case '>':
+                if (!(cardVal > clause.value)) return false;
+                break;
+              case '>=':
+                if (!(cardVal >= clause.value)) return false;
+                break;
+            }
+        }
+        //Clause field was invalid
+        else {
+          return false;
         }
       }
+      //idk
       return true;
     });
-
+      
     query.toArray().then(setFilteredCards);
   }, [searchFilter, fullCollection]);
 
@@ -155,10 +181,13 @@ export default function MainMenu() {
     function toggleSelectAll() {
       setSelected(prev => {
         const next = new Set(prev);
-        if (allSelected) {
-          filteredCards.forEach(c => next.delete(c.code));
+        const codes = filteredCards.map(c => c.code);
+        const prevAll = codes.length > 0 && codes.every(code => next.has(code));
+
+        if (prevAll) {
+          codes.forEach(code => next.delete(code));
         } else {
-          filteredCards.forEach(c => next.add(c.code));
+          codes.forEach(code => next.add(code));
         }
         return next;
       });
@@ -195,56 +224,27 @@ export default function MainMenu() {
       />
 
       {/* Table */}
-      <table>
-        <thead>
-          <tr>
-          <th scope="col">
-              <input
-                type="checkbox"
-                aria-label="Select all cards"
-                checked={allSelected}
-                onChange={toggleSelectAll}
-              />
-            </th>
-            <th>Code</th>
-            <th>Wishlists</th>
-            <th>Character</th>
-            <th>Series</th>
-            <th>Edition</th>
-            <th>Print</th>
-            <th>Tag</th>
-            
-          </tr>
-        </thead>
-        <tbody>
-          {filteredCards.map(card => (
-            <tr key={card.code}>
-              <td>
-                <input
-                  type="checkbox"
-                  aria-label={`Select ${card.character}`}
-                  checked={selected.has(card.code)}
-                  onChange={() => toggleOne(card.code)}
-                />
-              </td>
-              <td>{card.code}</td>
-              <td>{card.wishlists}</td>
-              <td>{card.character}</td>
-              <td>{card.series}</td>
-              <td>{card.edition}</td>
-              <td>{card.number}</td>
-              <td>{card.tag}</td>
+      <CollectionTable
+        cards={filteredCards}
+        selected={selected}
+        onToggleOne={toggleOne}
+        allSelected={allSelected}
+        onToggleSelectAll={toggleSelectAll}
+      />
 
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
 {/* todo: left align the collection div */}
       <div>
         Total Cards in Collection: {fullCollection?.length ?? 0}
       </div>
 
 {/* Table for Selected Cards */}
+    <h2>Selected Cards ({selectedCards.length})</h2>
+    <SelectedTable
+      cards={selectedCards}
+      selected={selected}
+      onToggleOne={toggleOne}
+    />
 
       {/* Upload progress */}
       {isUploading && (

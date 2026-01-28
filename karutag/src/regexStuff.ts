@@ -106,6 +106,7 @@ const FIELD_ALIASES: Record<string, string> = {
   character: "character",
 
   // wishlist(s)
+  w: "wishlists",
   wl: "wishlists",
   wls: "wishlists",
   wishlist: "wishlists",
@@ -206,12 +207,16 @@ export function searchCards(input: string): ParsedQuery {
 
   const tokens = splitKeepingQuotes(raw.trim());
 
-  for (const token of tokens) {
+  // for (const token of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+  const token = tokens[i];
+
     // --- Numeric clause first ---
     const numMatch = token.match(NUMERIC_CLAUSE_REGEX);
     if (numMatch) {
       const [, fieldRaw, opRaw, valueRaw] = numMatch;
-      const field = fieldRaw.toLowerCase();
+      // const field = fieldRaw.toLowerCase();
+      const field = normalizeField(fieldRaw);
       const operator = opRaw as NumOp;
       const value = Number(valueRaw);
 
@@ -224,23 +229,48 @@ export function searchCards(input: string): ParsedQuery {
       continue;
     }
 
-    // --- Text clause ---
-    const textMatch = token.match(TEXT_CLAUSE_REGEX);
-    if (textMatch) {
-      const [, fieldRaw, opRaw, valueRaw] = textMatch;
-      const field = fieldRaw.toLowerCase();
-      const operator = opRaw as TextOp;
-      const value = stripMatchingQuotes(valueRaw);
 
-      if (TEXT_KEYS.has(field)) {
-        clauses.push({ field, operator, value });
-        continue;
+// --- Text clause ---
+  const textMatch = token.match(TEXT_CLAUSE_REGEX);
+  if (textMatch) {
+    const [, fieldRaw, opRaw, valueRaw] = textMatch;
+    const field = normalizeField(fieldRaw);
+    const operator = opRaw as TextOp;
+
+    // Start with whatever came after ":" / "is"
+    let value = valueRaw.trim();
+
+    // If the value is NOT quoted, allow it to consume subsequent tokens as part of the same value.
+    // This makes: s:Fate Grand Order  work without quotes.
+    const isQuoted =
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'")) ||
+      value.startsWith('"') ||
+      value.startsWith("'");
+
+    if (!isQuoted && TEXT_KEYS.has(field)) {
+      // We'll glue on more tokens until we hit something that looks like a new clause.
+      // New clause = matches NUMERIC_CLAUSE_REGEX or TEXT_CLAUSE_REGEX
+      while (i + 1 < tokens.length) {
+        const next = tokens[i + 1];
+
+        if (NUMERIC_CLAUSE_REGEX.test(next) || TEXT_CLAUSE_REGEX.test(next)) break;
+
+        value += " " + next;
+        i++;
       }
+    }
 
-      // Unknown field -> older behavior: treat as leftover
-      leftovers.push(token);
+    value = stripMatchingQuotes(value);
+
+    if (TEXT_KEYS.has(field)) {
+      clauses.push({ field, operator, value });
       continue;
     }
+
+    leftovers.push(token);
+    continue;
+  }
 
     // --- Fallback: implicit character search ---
     // Older behavior: every “free” token becomes a character clause.
