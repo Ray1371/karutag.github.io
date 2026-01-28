@@ -132,14 +132,14 @@ export default function CollectionTable({
   );
 }
 // todo: delete this when pagediv is done
-const PageButton = ({ pageNumber, isActive, setCurrentPage }: { pageNumber: number, isActive: boolean, setCurrentPage: (page: number) => void }) => (
-  <button
-    onClick={() => setCurrentPage(pageNumber)}
-    disabled={isActive}
-  >
-    {pageNumber}
-  </button>
-);
+// const PageButton = ({ pageNumber, isActive, setCurrentPage }: { pageNumber: number, isActive: boolean, setCurrentPage: (page: number) => void }) => (
+//   <button
+//     onClick={() => setCurrentPage(pageNumber)}
+//     disabled={isActive}
+//   >
+//     {pageNumber}
+//   </button>
+// );
 
 const PageDiv = ({
   pageNumber,

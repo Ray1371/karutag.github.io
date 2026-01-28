@@ -1,6 +1,6 @@
 import type { Card } from "./Upload";
 import { useState } from "react";
-import Dexie from "dexie";
+// import Dexie from "dexie";
 import {db} from './Upload';
 
 type SelectedTableProps = {
@@ -26,14 +26,14 @@ const TagMessage = (props: { message: string; tag: string; codes: string[]; onDi
     //split message into array of codes
     const codes = props.message.split(' ');
     //exclude first 2 elements (kt and tag)
-    const cardCodes = codes.slice(2);
+    // const cardCodes = codes.slice(2);
     //update each card in indexedDB to have the new tag
     // const toUpdate = db;
 
 
-console.log("Matched rows:", count);
+console.log("Matched rows:");
     await db.transaction('rw', db.collection, async() => {
-      const card = await db.collection
+      await db.collection
         .where('code')
         .anyOf(codes)
         .modify({ tag: props.tag });

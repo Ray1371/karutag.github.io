@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState} from 'react';
 import './App.css';
 // import Upload from './Upload' // Use this when the user has not yet uploaded their Karuta collection ever.
 import NotYetUploaded from './NotYetUploaded';
@@ -14,7 +14,7 @@ function App() {
     localStorage.getItem("uploaded") === "true"
   );
 
-  const [cardCount, setCardCount] = useState(0); // todo: put card count somewhere visible, idk if move to MainMenu.tsx
+  // const [cardCount, setCardCount] = useState(0); // todo: put card count somewhere visible, idk if move to MainMenu.tsx
 
   // on-load only
   // useEffect(() => {

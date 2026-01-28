@@ -69,11 +69,11 @@ db.version(1).stores({
 // --------------------
 
 // remove accents from series names (Just for tokens; names should remain normal after)
-function normalizeAccents(text: string) {
-  return text
-    .normalize('NFD') // decompose accented characters
-    .replace(/[\u0300-\u036f]/g, ''); // remove accents
-}
+// function normalizeAccents(text: string) {
+//   return text
+//     .normalize('NFD') // decompose accented characters
+//     .replace(/[\u0300-\u036f]/g, ''); // remove accents
+// }
 
 // token builder (prefix tokens for partial matching)
 // function makeTokens(text: string): string[] {

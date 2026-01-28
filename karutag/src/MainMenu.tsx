@@ -21,17 +21,7 @@
 // Primary UI + orchestration component
 // Handles uploads, search input, and displaying cards
 
-//todo: Check out the following chat log topic names:
-/*
-From the chat log titles I can see on my side, the most relevant threads were:
 
-“Bulk vs piecemeal adding” (2025-12-17) — this is where we were explicitly talking about upload approach/structure (bulk vs incremental).
-
-“React Project Progress” (2025-12-30) — this is where we were working on the table/UI + Dexie collection updates, which ties directly into upload + refresh behavior.
-
-“Downloadable Files and Codebases” (2026-01-15) — this is more about the dev-server/react version issue, but it’s part of the same “project restoration” arc.
-
-*/
 import CollectionTable from "./CollectionTable";
 import SelectedTable from "./SelectedTable";
 
@@ -42,7 +32,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 
 import { db } from './Upload';
 import type { Card } from './Upload';
-import type { progressSignal } from './progressSignals';
+// import type { progressSignal } from './progressSignals';
 
 import { searchCards,
          TEXT_KEYS,
@@ -55,10 +45,15 @@ export default function MainMenu() {
 
 
   // Upload-related state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
-  const [cardsUpdated, setCardsUpdated] = useState(0);
+  // let selectedFile: File | null; 
+  // const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // const [isUploading, setIsUploading] = useState(false);
+  // const [rowCount, setRowCount] = useState(0);
+  // const [cardsUpdated, setCardsUpdated] = useState(0);
+  const [_selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading] = useState(false);
+  const [rowCount] = useState(0);
+  const [cardsUpdated] = useState(0);
 
   // Search-related state
   const [searchFilter, setSearchFilter] = useState('');
@@ -80,13 +75,13 @@ export default function MainMenu() {
   (fullCollection ?? []).filter((c) => selected.has(c.code));
 
   // Progress signals passed into upload logic
-  const signals: progressSignal = {
-    updateRowCount: (count) => setRowCount(count),
-    updateCompletedRows: (count) => setCardsUpdated(count),
-    updateValid: (valid: boolean) => {
-  if (valid) setIsUploading(false);
-},
-  };
+//   const signals: progressSignal = {
+//     updateRowCount: (count) => setRowCount(count),
+//     updateCompletedRows: (count) => setCardsUpdated(count),
+//     updateValid: (valid: boolean) => {
+//   if (valid) setIsUploading(false);
+// },
+//   };
 
   // -----------------------------
   // Filtering logic (older style)
