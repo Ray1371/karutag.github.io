@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Vite to GitHub Pages
 
 on:
   push:
@@ -17,12 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    # ✅ run all "run:" commands inside ./karutag
-    defaults:
-      run:
-        working-directory: karutag
-
     steps:
       - uses: actions/checkout@v4
 
@@ -30,15 +24,18 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          # ✅ cache the right lockfile (since your app is in ./karutag)
           cache-dependency-path: karutag/package-lock.json
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install
+        working-directory: karutag
+        run: npm ci
+
+      - name: Build
+        working-directory: karutag
+        run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          # ✅ upload the built site from the nested project
           path: karutag/dist
 
   deploy:
