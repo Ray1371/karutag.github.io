@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   // Allow overriding the base path via the BASE_URL env var (useful for GitHub Pages)
   // base: process.env.BASE_URL || '/',
-  base: '/',   
+  base: "/Karutagx/",
   plugins: [
     react({
       babel: {
