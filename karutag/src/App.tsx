@@ -25,11 +25,9 @@ function App() {
     <>
     {hasUploaded && (
   <>
-    {/* <button 
+    <button 
     className='upload-button'
-    onClick={resetUploaded}>Update Collection</button> */}
-    {/* TEMP: comment this out while debugging */}
-    {/* <MainMenu /> */}
+    onClick={resetUploaded}>Reset Collection</button>
   </>
   )}
 

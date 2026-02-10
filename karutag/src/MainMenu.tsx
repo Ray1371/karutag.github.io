@@ -12,7 +12,7 @@ import { useEffect, useState, useMemo } from 'react';
 // import Papa from 'papaparse';
 import { useLiveQuery } from 'dexie-react-hooks';
 
-import { db } from './Upload';
+import handleUpload, { db } from './Upload';
 import type { Card } from './Upload';
 // import BulkButton from './BulkButton';
 // import type { progressSignal } from './progressSignals';
@@ -269,11 +269,11 @@ function toggleSort(nextKey: SortKey) {
       {/* Upload */}
       {/* todo: remove margin from first-row elements */}
       <span className='first-row'>
-        <input
+        {/* <input
           type="file"
           accept=".csv"
           onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-        />
+        /> */}
 
 
 
