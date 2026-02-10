@@ -1,5 +1,6 @@
 import { useState,useEffect } from "react";
 import type { Card } from "./Upload";
+import './index.css'
 
 type CollectionTableProps = {
   cards: Card[];
@@ -7,6 +8,9 @@ type CollectionTableProps = {
   onToggleOne: (code: string) => void;
   allSelected: boolean;
   onToggleSelectAll: () => void;
+  sortKey: string;
+  sortDir: string;
+  onToggleSort: (key: 'wishlists' | 'character' | 'series' | 'edition' | 'number') => void;
 };
 
 export default function CollectionTable({
@@ -15,12 +19,16 @@ export default function CollectionTable({
   onToggleOne,
   allSelected,
   onToggleSelectAll,
+  sortKey,
+  sortDir,
+  onToggleSort
 }: CollectionTableProps) {
     //pagination component state
   const [currentPage, setCurrentPage] = useState(1);
   const cardsPerPage = 20;//change when ready to implement dynamic cards per page
   // const [cardsPerPage, setCardsPerPage] = useState(20);
   const [displayedCards, setDisplayedCards] = useState<Card[]>([]);//cards to show on current page, unsure if wanted this way
+
 
 
   useEffect(() => {
@@ -37,90 +45,88 @@ export default function CollectionTable({
   if (currentPage < 1) setCurrentPage(1);
 }, [maxPage, currentPage]);
 
-  
 
-
-
-  //todo: implement pagination logic here
   
   
   return (
-  <div>
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">
+  <div id='collection-table'>
+    <table className='card-table'>
+      <thead
+        className="header-bar"
+      >
+        <tr
+        // className='align-text-left'
+        >
+          <th scope="col"
+            className="col-check"
+          >
             <input
               type="checkbox"
               aria-label="Select all cards"
               checked={allSelected}
               onChange={onToggleSelectAll}
+              
             />
           </th>
-          <th>Code</th>
-          <th>Wishlists</th>
-          <th>Character</th>
-          <th>Series</th>
-          <th>Edition</th>
-          <th>Print</th>
-          <th>Tag</th>
+          <th className="col-code">Code</th>
+          <th className="col-wl">
+            <button onClick={() => onToggleSort('wishlists')}>
+              {sortKey === 'wishlists' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+            </button>
+             WLs
+
+            </th>
+          <th className="col-name">
+          <button onClick={() => onToggleSort('character')}>
+              {sortKey === 'character' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+            </button>
+            Character</th>
+          <th className="col-series">
+            <button onClick={() => onToggleSort('series')}>
+              {sortKey === 'series' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+            </button>
+            Series</th>
+          <th className='col-edition'>Ed.</th>
+          <th className='col-print'>Print</th>
+          <th className='col-tag'>Tag</th>
         </tr>
       </thead>
 
-      <tbody>
+      <tbody >
         {
           displayedCards.map((card) => (
-            <tr key={card.code}>
+            <tr key={card.code} 
+            className={`align-text-left`}
+            >
               <td>
                 <input
                   type="checkbox"
                   aria-label={`Select ${card.character}`}
                   checked={selected.has(card.code)}
                   onChange={() => onToggleOne(card.code)}
+                  className="col-check"
                 />
               </td>
-              <td>{card.code}</td>
-              <td>{card.wishlists}</td>
-              <td>{card.character}</td>
-              <td>{card.series}</td>
-              <td>{card.edition}</td>
-              <td>{card.number}</td>
-              <td>{card.tag}</td>
+              <td className="code-column">{card.code}</td>
+              <td className="col-wl">{card.wishlists}</td>
+              <td 
+                onClick={()=>navigator.clipboard.writeText(card.series)}
+                className="col-name">{card.character}</td>
+              <td 
+                onClick={()=>navigator.clipboard.writeText(card.series)}
+                className="col-series">{card.series}</td>
+              <td className='col-edition'>{card.edition}</td>
+              <td className='col-print'>{card.number}</td>
+              <td className='col-tag'>{card.tag}</td>
             </tr>
           ))
         }
-        {/* {cards.map((card) => (
-          <tr key={card.code}>
-            <td>
-              <input
-                type="checkbox"
-                aria-label={`Select ${card.character}`}
-                checked={selected.has(card.code)}
-                onChange={() => onToggleOne(card.code)}
-              />
-            </td>
 
-            <td>{card.code}</td>
-            <td>{card.wishlists}</td>
-            <td>{card.character}</td>
-            <td>{card.series}</td>
-            <td>{card.edition}</td>
-            <td>{card.number}</td>
-            <td>{card.tag}</td>
-          </tr>
-        ))} */}
       </tbody>
     </table>
 
     <div>
-      {/* {Array.from({ length: maxPage }, (_, i) => i + 1).map(pageNumber => (
-        <PageButton
-          key={pageNumber}
-          pageNumber={pageNumber}
-          isActive={currentPage === pageNumber}
-          setCurrentPage={setCurrentPage}
-        />
-      ))} */}
+
     <PageDiv
       pageNumber={currentPage}
       setCurrentPage={setCurrentPage}
@@ -131,15 +137,7 @@ export default function CollectionTable({
   </div>
   );
 }
-// todo: delete this when pagediv is done
-// const PageButton = ({ pageNumber, isActive, setCurrentPage }: { pageNumber: number, isActive: boolean, setCurrentPage: (page: number) => void }) => (
-//   <button
-//     onClick={() => setCurrentPage(pageNumber)}
-//     disabled={isActive}
-//   >
-//     {pageNumber}
-//   </button>
-// );
+
 
 const PageDiv = ({
   pageNumber,
@@ -176,14 +174,7 @@ const PageDiv = ({
         {pageNumber - 1}
       </button>
     }
-  {/* Current Page / Page 3 */} 
-    {/* {maxPage >= 3 &&
-      <button 
-        onClick={() => setCurrentPage(2)} 
-        disabled={!(pageNumber !== 2) || pageNumber >= 3}>
-        {pageNumber}
-      </button>
-    } */}
+
   {/* Page 4 / Next Page  */}
     {maxPage > 3 &&
       <button 

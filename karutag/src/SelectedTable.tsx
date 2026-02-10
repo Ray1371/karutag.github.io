@@ -1,20 +1,34 @@
 import type { Card } from "./Upload";
-import { useState } from "react";
+// import { useState } from "react";
 // import Dexie from "dexie";
+import { useState, type ChangeEvent } from "react";
 import {db} from './Upload';
+import { TaggingBarPortal } from "./TagPortal";
+import './index.css'
 
 type SelectedTableProps = {
   cards: Card[];
   selected: Set<string>;
   onToggleOne: (code: string) => void;
+    sortKey: 'wishlists' | 'character' | 'series' | 'edition' | 'number';
+    sortDir: 'asc' | 'desc';
+    onToggleSort: (key: 'wishlists' | 'character' | 'series' | 'edition' | 'number') => void;
+    isSingleton: boolean;
 };
 
-// const TagMessage = (props: {message: string, tag: string}) => {
-const TagMessage = (props: { message: string; tag: string; codes: string[]; onDiscard: () => void }) => {
+const TagMessage = (props: { 
+    message: string;
+    tag: string;
+    codes: string[];
+    onDiscard: () => void;
+    isSingleton?:boolean;    
+  }) => {
   const[clicked, setClicked] = useState(false);
   const[applied, setApplied] = useState(false);
   //todo?: Maybe let the most recent TM be green. How to do that?
   const handleClick = () => {
+    if(clicked === true) 
+      props.onDiscard();//prevent multiple clicks within timeout
     setClicked(true);
     //delay for 5 seconds then reset clicked to false
     setTimeout(() => {
@@ -25,10 +39,6 @@ const TagMessage = (props: { message: string; tag: string; codes: string[]; onDi
   const applyChange = async() => {
     //split message into array of codes
     const codes = props.message.split(' ');
-    //exclude first 2 elements (kt and tag)
-    // const cardCodes = codes.slice(2);
-    //update each card in indexedDB to have the new tag
-    // const toUpdate = db;
 
 
 console.log("Matched rows:");
@@ -81,6 +91,10 @@ export default function SelectedTable({
   cards,
   selected,
   onToggleOne,
+  sortKey,
+  sortDir,
+  onToggleSort,
+  isSingleton,
 }: SelectedTableProps) {
   if (cards.length === 0) {
     return <div>No cards selected.</div>;
@@ -88,70 +102,102 @@ export default function SelectedTable({
   //state to hold tag message components. Would like these to persist across user sessions until cleared or user re-uploads collection.
 type TagPrompt = { id: string; tag: string; codes: string[]; message: string };
   const [tagMessages, setTagMessages] = useState<TagPrompt[]>([]);
-
-  // const [tagMessages, setTagMessages] = useState<typeof TagMessage[]>([]);//need to fix
   const [tagName, setTagName] = useState('');
-const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+// const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
   setTagName(event.target.value);
 };
-  const generatePrompts = () => {
+
+//todo: style borders onto the generated components
+//todo: implement so that if user clicks message while applied is true, auto-closes the component after copying
+
+  const generatePrompts = (isSingleton: boolean) => {
     //get all card codes from selected set
     let selectedCards: string[] = [];
     selected.forEach((code) => {
       selectedCards.push(code);
     });
-    //split into chunks of 50
+
+
+
     const prompts:TagPrompt[] = [];
     let chunk: string[] = [];
-    
-    while (selectedCards.length > 0) {//while or do while?
-      chunk.push(selectedCards.shift()!);
-      //if maxed out chunk, force push the tag message component,
-      //flush chunk, keep going if applicable
-      if(chunk.length === 50) {
-        prompts.push({
-          id: crypto.randomUUID(),
-          tag: tagName,
-          codes: [...chunk],               // ✅ the real source of truth
-          message: chunk.join(" "),        // whatever you want to display/copy
-        });
-  
-        chunk = [];   
-      }
-    };
-    //handle leftover chunk
-      if (chunk.length > 0) {
-        prompts.push({
-          id: crypto.randomUUID(),
-          tag: tagName,
-          codes: [...chunk],               // ✅ the real source of truth
-          message: chunk.join(" "),        // whatever you want to display/copy
-        });
 
+    if(isSingleton) {
+      while(selectedCards.length > 0) {
+        chunk.push(selectedCards.shift()!);
+        //create prompt for each individual card
+        prompts.push({
+          id: crypto.randomUUID(),
+          tag: tagName,
+          codes: [...chunk],               // ✅ the real source of truth
+          message: chunk.join(" "),        // whatever you want to display/copy
+        });
+        chunk = [];
+      }
+    }
+    //split into chunks of 50 instead
+    else{
+      while (selectedCards.length > 0) {//while or do while?
+        chunk.push(selectedCards.shift()!);
+        //if maxed out chunk, force push the tag message component,
+        //flush chunk, keep going if applicable
+        if(chunk.length === 50) {
+          prompts.push({
+            id: crypto.randomUUID(),
+            tag: tagName,
+            codes: [...chunk],               // ✅ the real source of truth
+            message: chunk.join(" "),        // whatever you want to display/copy
+          });
+    
+          chunk = [];   
+        }
+      };
+      //handle leftover chunk
+        if (chunk.length > 0) {
+          prompts.push({
+            id: crypto.randomUUID(),
+            tag: tagName,
+            codes: [...chunk],               // ✅ the real source of truth
+            message: chunk.join(" "),        // whatever you want to display/copy
+
+          });
+
+        }
     }
     setTagMessages(prev => [...prev, ...prompts]);
   };
 
 
   return (
-    <div>
-    <table>
+    <div id='selected-table'>
+    <table className='card-table'>
       <thead>
         <tr>
-          <th scope="col">Selected</th>
-          <th>Code</th>
-          <th>Wishlists</th>
-          <th>Character</th>
-          <th>Series</th>
-          <th>Edition</th>
-          <th>Print</th>
-          <th>Tag</th>
+          <th scope="col"
+            className="col-check"
+          >Selected</th>
+          <th className="col-code">Code</th>
+          <th className="col-wl">
+            WLs
+            <button onClick={() => onToggleSort('wishlists')}>
+              {sortKey === 'wishlists' ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+            </button>
+            </th>
+          <th className="col-name">Character</th>
+          <th className="col-series">Series</th>
+          <th className='col-edition'>Ed.</th>
+          <th className='col-print'>Print</th>
+          <th className='col-tag'>Tag</th>
           <th>
             <p>Tag Selected As:</p>
-            <input type="text" placeholder="Enter tag name" 
+            <input 
+             className="wider-input"
+             type="text"
+             placeholder="Enter tag name" 
             value={tagName} onChange={handleChange}
             />
-            <button onClick={generatePrompts}>Tag Selected</button>
+            <button onClick={() => generatePrompts(isSingleton)}>Tag Selected</button>
           </th>
           
         </tr>
@@ -160,27 +206,36 @@ const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       <tbody>
         {cards.map((card) => (
           <tr key={card.code}>
-            <td>
+            <td
+              className="col-check"
+            >
               <input
                 type="checkbox"
                 aria-label={`Deselect ${card.character}`}
                 checked={selected.has(card.code)}
                 onChange={() => onToggleOne(card.code)}
+                className="col-check"
               />
             </td>
 
-            <td>{card.code}</td>
-            <td>{card.wishlists}</td>
-            <td>{card.character}</td>
-            <td>{card.series}</td>
-            <td>{card.edition}</td>
-            <td>{card.number}</td>
-            <td>{card.tag}</td>
+            <td className="col-code">{card.code}</td>
+            <td className="col-wl">{card.wishlists}</td>
+            <td 
+              onClick={()=>navigator.clipboard.writeText(card.character)}
+              className="col-name">{card.character}</td>
+            <td 
+              onClick={()=>navigator.clipboard.writeText(card.series)}
+              className="col-series">{card.series}</td>
+            <td className="col-edition">{card.edition}</td>
+            <td className="col-print">{card.number}</td>
+            <td className="col-tag">{card.tag}</td>
           </tr>
         ))}
       </tbody>
     </table>
-    {tagMessages.length > 0 && (
+    <div id='tag-messages'
+      className="pageBottomSpacer" />
+     {tagMessages.length > 0 && (
       <div>
         {tagMessages.map((p) => (
           <TagMessage
@@ -194,7 +249,7 @@ const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           />
         ))}
       </div>
-    )}
+    )} 
     </div>
     
   );

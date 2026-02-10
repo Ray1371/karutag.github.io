@@ -104,6 +104,8 @@ const FIELD_ALIASES: Record<string, string> = {
   c: "character",
   char: "character",
   character: "character",
+  n: "character",
+  name: "character",
 
   // wishlist(s)
   w: "wishlists",

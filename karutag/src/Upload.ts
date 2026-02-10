@@ -68,30 +68,6 @@ db.version(1).stores({
 // Token helpers
 // --------------------
 
-// remove accents from series names (Just for tokens; names should remain normal after)
-// function normalizeAccents(text: string) {
-//   return text
-//     .normalize('NFD') // decompose accented characters
-//     .replace(/[\u0300-\u036f]/g, ''); // remove accents
-// }
-
-// token builder (prefix tokens for partial matching)
-// function makeTokens(text: string): string[] {
-//   const normalized = normalizeAccents((text ?? '').toLowerCase());
-
-//   // Replace some special chars with spaces
-//   const tokens = normalized
-//     .replace(/[-/@_]/g, ' ')
-//     .split(/\s+/)
-//     .filter(Boolean);
-
-//   // prefix tokens: fate -> f, fa, fat, fate
-//   const prefixes = tokens.flatMap(t =>
-//     t.split('').map((_, i) => t.slice(0, i + 1))
-//   );
-
-//   return Array.from(new Set([...tokens, ...prefixes]));
-// }
 function makeTokens(text: unknown): string[] {
   const s = String(text ?? "").toLowerCase();
   return s
