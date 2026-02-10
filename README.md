@@ -1,3 +1,17 @@
+Feb 10, 2026 Update
+
+Added a Navbar to let users navigate between different sections of the site more easily
+
+Styled the tables for (hopefully) more visibility, including visible borders and zebra striping
+
+Added ascending/descending sorting by wishlists, character name, and series names
+
+Added buttons for automatically selecting bulk cards, as well as an input for letting users define at what wishlist count they consider bulk
+
+Added a feature to let users click on character or series names to copy them to their clipboard in case they want a refresher on the given card
+(Maybe later I'll add a way to combine both into the clipboard.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 I made this site to try learning how IndexedDB and Dexie work. 
 While learning the flowchart was fun and made sense, I could never remember the syntaxes by heart.
 
@@ -50,6 +64,4 @@ A: To be honest, go for it. I made this to work on my skills.
 TODO List:
 -Add hotkeys for cycling through pages, search filter/tagging boxes, etc.
 -Adding an indicator of the most recent tagging message box that has been interacted with
--Planning to either add portals for the tagging boxes, or to have ways to scroll directly to the filtering/tag naming/tagging sections of the page.
 -Wish to make site more user friendly
--Planning to add a button to massively add all bulk cards (P>1000, WL<10 by default) to the selected list for convenient burning.
